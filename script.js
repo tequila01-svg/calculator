@@ -3,7 +3,7 @@ const calculator = {
     firstOperand: null,
     waitingForSecondOperand: false,
     operator: null,
-}
+};
 
 function updateDisplay() {
     const display = document.querySelector('.display');
@@ -23,30 +23,46 @@ function inputDigit(digit) {
 }
 
 function inputDecimal(dot) {
+    if (calculator.waitingForSecondOperand) {
+        calculator.displayValue = '0.';
+        calculator.waitingForSecondOperand = false;
+        updateDisplay();
+        return;
+    }
+
     if (!calculator.displayValue.includes(dot)) {
-        calculator.displayValue += dot; 
+        calculator.displayValue += dot;
     }
     updateDisplay();
 }
 
 function handleOperator(nextOperator) {
     const { firstOperand, operator, displayValue } = calculator;
-    const inputValue = parseFloat(displayValue); 
+    const inputValue = parseFloat(displayValue);
 
     if (operator && calculator.waitingForSecondOperand) {
         calculator.operator = nextOperator;
         return;
     }
 
-    if (firstOperand == null && !isNaN(inputValue)) { 
+    if (firstOperand == null && !isNaN(inputValue)) {
         calculator.firstOperand = inputValue;
     } else if (operator) {
         const result = performCalculation[operator](firstOperand, inputValue);
         calculator.displayValue = String(result);
         calculator.firstOperand = result;
     }
+
     calculator.waitingForSecondOperand = true;
     calculator.operator = nextOperator;
+
+    if (nextOperator === '=') {
+        calculator.firstOperand = null;
+        calculator.operator = null;
+        calculator.waitingForSecondOperand = false;
+    }
+
+    updateDisplay();
 }
 
 const performCalculation = {
@@ -54,14 +70,13 @@ const performCalculation = {
     '-': (firstOperand, secondOperand) => firstOperand - secondOperand,
     '*': (firstOperand, secondOperand) => firstOperand * secondOperand,
     '/': (firstOperand, secondOperand) => firstOperand / secondOperand,
-    '=': (firstOperand, secondOperand) => secondOperand,
 };
 
 function resetCalculation() {
     calculator.displayValue = '0';
     calculator.waitingForSecondOperand = false;
     calculator.firstOperand = null;
-    calculator.operator = null;  
+    calculator.operator = null;
 
     updateDisplay();
 }
@@ -102,7 +117,7 @@ keys.addEventListener('click', event => {
         handlePercentage();
         return;
     }
-    if (target.classList.contains('operator')) { 
+    if (target.classList.contains('operator')) {
         handleOperator(target.textContent);
         return;
     }
